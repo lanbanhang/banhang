@@ -6,7 +6,7 @@
     <title>Ngọc Lan - Quản lý đơn hàng thông minh</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Sử dụng phiên bản html2canvas ổn định nhất cho iOS -->
+    <!-- Sử dụng thư viện html2canvas bản ổn định cho thiết bị di động -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
@@ -26,14 +26,21 @@
         }
         .btn-active:active { transform: scale(0.96); }
         
+        /* Hóa đơn ẩn được tối ưu cho việc chụp trên Safari/iOS */
         #invoice-template {
-            position: fixed; left: -9999px; top: 0;
-            width: 400px; background: white; padding: 30px; color: #1e293b;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 450px;
+            background: white;
+            padding: 30px;
+            color: #1e293b;
+            visibility: hidden;
             z-index: -1;
         }
         .invoice-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .invoice-table th { border-bottom: 2px solid #334155; padding: 10px 5px; text-align: left; font-size: 13px; text-transform: uppercase; }
-        .invoice-table td { border-bottom: 1px solid #e2e8f0; padding: 10px 5px; font-size: 14px; }
+        .invoice-table th { border-bottom: 2px solid #334155; padding: 10px 5px; text-align: left; font-size: 14px; text-transform: uppercase; }
+        .invoice-table td { border-bottom: 1px solid #e2e8f0; padding: 12px 5px; font-size: 15px; }
 
         .modal {
             display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
@@ -177,85 +184,56 @@
                 <h2 class="text-xl font-black text-blue-900 italic">LỊCH SỬ BÁN HÀNG</h2>
                 <button onclick="toggleHistory()" class="text-slate-400"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <div class="mb-6 space-y-2">
-                <button onclick="exportToCSV()" class="w-full bg-slate-100 text-slate-600 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 border border-slate-200">
-                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> XUẤT CSV
-                </button>
-                <button onclick="analyzeHistory()" class="w-full bg-indigo-600 text-white py-3 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
-                    <i data-lucide="sparkles" class="w-4 h-4"></i> ✨ PHÂN TÍCH KINH DOANH
-                </button>
-            </div>
             <div id="historyList" class="space-y-4"></div>
         </div>
     </div>
 
-    <!-- AI RESULT MODAL -->
-    <div id="aiModal" class="modal">
-        <div class="modal-content bg-gradient-to-br from-white to-indigo-50">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center gap-2 text-indigo-600 font-black">
-                    <i data-lucide="sparkles" class="w-5 h-5"></i> TRỢ LÝ AI NGỌC LAN
-                </div>
-                <button onclick="closeAiModal()" class="text-slate-400"><i data-lucide="x" class="w-6 h-6"></i></button>
-            </div>
-            <div id="aiLoading" class="hidden">
-                <div class="ai-shimmer h-40 rounded-2xl w-full mb-4"></div>
-                <p class="text-center text-indigo-400 text-xs animate-pulse">Đang suy nghĩ...</p>
-            </div>
-            <div id="aiResult" class="text-sm text-slate-700 leading-relaxed space-y-3 whitespace-pre-wrap"></div>
-            <button id="copyAiBtn" class="w-full mt-6 bg-white border border-indigo-200 text-indigo-600 py-3 rounded-xl font-bold text-xs uppercase hidden" onclick="copyAiContent()">
-                <i data-lucide="copy" class="w-3 h-3 inline mr-1"></i> Sao chép nội dung
-            </button>
-        </div>
-    </div>
-
-    <!-- NOTIFICATIONS -->
+    <!-- NOTIFICATION TOAST -->
     <div id="syncToast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl z-[100] hidden flex items-center gap-3">
         <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-        <span id="syncToastText">Đang lưu dữ liệu...</span>
+        <span id="toastText">Đang xử lý...</span>
     </div>
 
     <!-- HÓA ĐƠN ẨN (Dùng để chụp ảnh) -->
     <div id="invoice-template">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
             <div>
-                <h1 style="font-size: 24px; font-weight: 900; color: #1d4ed8; margin: 0;">NGỌC LAN</h1>
-                <p style="font-size: 10px; color: #64748b; letter-spacing: 2px; margin-top: 5px; text-transform: uppercase;">Hệ thống bán hàng thông minh</p>
+                <h1 style="font-size: 28px; font-weight: 900; color: #1d4ed8; margin: 0;">NGỌC LAN</h1>
+                <p style="font-size: 12px; color: #64748b; letter-spacing: 2px; margin-top: 5px;">HỆ THỐNG BÁN HÀNG</p>
             </div>
             <div style="text-align: right;">
-                <p id="invoiceDate" style="font-size: 12px; color: #64748b; margin: 0;"></p>
-                <p style="font-size: 13px; color: #1d4ed8; font-weight: bold; margin-top: 5px;">HÓA ĐƠN BÁN LẺ</p>
+                <p id="invoiceDate" style="font-size: 14px; color: #64748b; margin: 0;"></p>
+                <p style="font-size: 14px; color: #1d4ed8; font-weight: bold; margin-top: 5px;">HÓA ĐƠN BÁN LẺ</p>
             </div>
         </div>
-        <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
-            <p style="margin: 0 0 4px 0; font-size: 10px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Khách hàng</p>
-            <h2 id="invCustomerName" style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Khách lẻ</h2>
-            <p id="invCustomerNote" style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;"></p>
+        <div style="background: #f8fafc; padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 1px solid #e2e8f0;">
+            <p style="margin: 0 0 5px 0; font-size: 12px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Khách hàng</p>
+            <h2 id="invCustomerName" style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">Khách lẻ</h2>
+            <p id="invCustomerNote" style="margin: 5px 0 0 0; font-size: 14px; color: #64748b;"></p>
         </div>
         <table class="invoice-table">
             <thead>
                 <tr>
                     <th style="width: 45%;">Tên hàng</th>
-                    <th style="width: 15%; text-align: center;">SL</th>
+                    <th style="width: 10%; text-align: center;">SL</th>
                     <th style="width: 20%; text-align: right;">Giá</th>
-                    <th style="width: 20%; text-align: right;">Tổng</th>
+                    <th style="width: 25%; text-align: right;">Tổng</th>
                 </tr>
             </thead>
             <tbody id="invItemsBody"></tbody>
         </table>
-        <div style="margin-top: 25px; border-top: 2px solid #e2e8f0; padding-top: 15px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;"><span style="color: #64748b; font-size: 13px;">Tạm tính:</span><span id="invSubtotal" style="font-weight: bold; font-size: 13px;">0₫</span></div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; color: #ef4444;"><span style="font-size: 13px;">Chiết khấu:</span><span id="invDiscount" style="font-weight: bold; font-size: 13px;">-0₫</span></div>
-            <div style="display: flex; justify-content: space-between; margin-top: 12px; border-top: 1px dashed #cbd5e1; padding-top: 12px;"><span style="font-size: 16px; font-weight: 900; color: #1e293b;">TỔNG CỘNG:</span><span id="invGrandTotal" style="font-size: 20px; font-weight: 900; color: #1d4ed8;">0₫</span></div>
+        <div style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><span style="color: #64748b; font-size: 14px;">Tạm tính:</span><span id="invSubtotal" style="font-weight: bold; font-size: 14px;">0₫</span></div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #ef4444;"><span style="font-size: 14px;">Chiết khấu:</span><span id="invDiscount" style="font-weight: bold; font-size: 14px;">-0₫</span></div>
+            <div style="display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 15px;"><span style="font-size: 18px; font-weight: 900; color: #1e293b;">TỔNG CỘNG:</span><span id="invGrandTotal" style="font-size: 22px; font-weight: 900; color: #1d4ed8;">0₫</span></div>
         </div>
-        <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #94a3b8; font-style: italic;">
-            Cảm ơn quý khách đã mua hàng tại Ngọc Lan!
+        <div style="text-align: center; margin-top: 40px; color: #94a3b8; font-size: 12px; font-style: italic;">
+            Cảm ơn quý khách đã tin tưởng Ngọc Lan!
         </div>
     </div>
 
     <script>
         const apiKey = ""; 
-        // VUI LÒNG DÁN URL WEB APP CỦA BẠN VÀO ĐÂY
         const GOOGLE_SHEET_APP_URL = ""; 
 
         lucide.createIcons();
@@ -264,40 +242,9 @@
         let cart = [];
         let orderHistory = JSON.parse(localStorage.getItem('ngoclan_orders')) || [];
 
-        // --- GEMINI API ---
-        async function callGemini(prompt, systemInstruction = "Bạn là trợ lý bán hàng chuyên nghiệp cho shop Ngọc Lan.") {
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: { parts: [{ text: systemInstruction }] }
-            };
-
-            let retries = 0;
-            const delays = [1000, 2000, 4000];
-
-            while (retries < 3) {
-                try {
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error("API Error");
-                    const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Không có phản hồi từ AI.";
-                } catch (err) {
-                    await new Promise(r => setTimeout(r, delays[retries]));
-                    retries++;
-                }
-            }
-            return "Xin lỗi, AI đang bận. Thử lại sau nhé.";
-        }
-
         // --- SHEET SYNC ---
         async function syncToGoogleSheets(orderData) {
             if (!GOOGLE_SHEET_APP_URL) return; 
-            showToast("Đang đồng bộ banghang...");
-
             try {
                 await fetch(GOOGLE_SHEET_APP_URL, {
                     method: 'POST',
@@ -305,11 +252,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
-            } catch (error) {
-                console.error("Lỗi đồng bộ:", error);
-            } finally {
-                setTimeout(hideToast, 1500);
-            }
+            } catch (error) { console.error("Sync error:", error); }
         }
 
         // --- APP LOGIC ---
@@ -318,82 +261,47 @@
             document.getElementById('prodQty').innerText = currentQty;
         }
 
-        function calculateDiscount(price, qty, note) {
-            const discountMatch = note.match(/(\d+)%/);
-            if (discountMatch) {
-                const percent = parseInt(discountMatch[1]);
-                return (price * qty * percent) / 100;
-            }
-            return 0;
-        }
-
-        async function addToCart() {
+        function addToCart() {
             const name = document.getElementById('prodName').value;
             const note = document.getElementById('prodNote').value;
             const price = parseFloat(document.getElementById('prodPrice').value);
             
-            if (!name || isNaN(price)) {
-                alert("Nhập tên và giá hàng nhé!");
-                return;
-            }
+            if (!name || isNaN(price)) { alert("Vui lòng nhập tên và giá!"); return; }
 
-            const discountAmount = calculateDiscount(price, currentQty, note);
-            const subtotal = (price * currentQty) - discountAmount;
+            let discount = 0;
+            const discMatch = note.match(/(\d+)%/);
+            if (discMatch) discount = (price * currentQty * parseInt(discMatch[1])) / 100;
 
-            cart.push({ id: Date.now(), name, note, price, qty: currentQty, discount: discountAmount, total: subtotal });
+            cart.push({
+                id: Date.now(),
+                name,
+                note,
+                price,
+                qty: currentQty,
+                discount: discount,
+                total: (price * currentQty) - discount
+            });
 
             renderCart();
-            suggestCrossSell(name); 
             
             document.getElementById('prodName').value = '';
             document.getElementById('prodNote').value = '';
             document.getElementById('prodPrice').value = '';
             currentQty = 1;
             document.getElementById('prodQty').innerText = 1;
-            document.getElementById('aiContentBtn').classList.remove('hidden');
         }
 
-        async function suggestCrossSell(itemName) {
-            const box = document.getElementById('aiSuggestionBox');
-            const text = document.getElementById('aiSuggestionText');
-            box.classList.remove('hidden');
-            text.innerText = "Chờ tí, AI tìm gợi ý...";
-            const prompt = `Khách vừa chọn mua "${itemName}". Gợi ý 1 sản phẩm bán kèm tại shop Ngọc Lan, viết 1 câu siêu ngắn.`;
-            const suggestion = await callGemini(prompt);
-            text.innerText = suggestion;
-        }
-
-        async function generateMarketingContent() {
-            if (cart.length === 0) return;
-            openAiModal();
-            const items = cart.map(i => i.name).join(', ');
-            const prompt = `Viết 1 tin nhắn Zalo cực ngắn mời khách mua thêm món khác dựa trên: ${items}.`;
-            const content = await callGemini(prompt);
-            showAiResult(content);
-        }
-
-        async function analyzeHistory() {
-            if (orderHistory.length === 0) { alert("Chưa có đơn nào!"); return; }
-            openAiModal();
-            const data = orderHistory.slice(0, 5).map(o => `${o.customer}: ${o.total}₫`).join(', ');
-            const prompt = `Đây là 5 đơn gần nhất: ${data}. Nhận xét nhanh 1 câu về tình hình bán hàng của shop Ngọc Lan.`;
-            const analysis = await callGemini(prompt);
-            showAiResult(analysis);
-        }
-
-        // --- UI ACTIONS ---
         function renderCart() {
             const container = document.getElementById('cartItems');
             if (cart.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 opacity-30 italic text-sm">Chưa có sản phẩm</div>';
+                container.innerHTML = '<div class="text-center py-10 opacity-30 italic text-sm">Chưa có sản phẩm nào</div>';
                 updateTotals(); return;
             }
             container.innerHTML = cart.map(item => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center animate-in fade-in slide-in-from-right-4 duration-300">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
                     <div class="flex-1">
                         <h4 class="font-bold text-slate-800">${item.name}</h4>
-                        <div class="text-[11px] text-slate-400">${item.qty} x ${item.price.toLocaleString()}₫</div>
-                        ${item.note ? `<div class="text-[11px] text-blue-500 italic">${item.note}</div>` : ''}
+                        <div class="text-[11px] text-slate-400">SL: ${item.qty} • Giá: ${item.price.toLocaleString()}₫</div>
                     </div>
                     <div class="text-right flex items-center gap-3">
                         <div class="font-black text-blue-700">${item.total.toLocaleString()}₫</div>
@@ -419,35 +327,38 @@
             const newOrder = {
                 timestamp: new Date().toLocaleString('vi-VN'),
                 customer: customer,
-                note: document.getElementById('customerNote').value,
                 items: cart.map(i => `${i.name}(${i.qty})`).join(', '),
                 total: cart.reduce((sum, item) => sum + item.total, 0)
             };
             orderHistory.unshift(newOrder);
             localStorage.setItem('ngoclan_orders', JSON.stringify(orderHistory));
             syncToGoogleSheets(newOrder);
-            alert(`Đã lưu đơn ${customer}!`);
+            alert("Đã lưu đơn hàng!");
             resetApp(false);
         }
 
+        // --- SỬA LỖI GỬI ẢNH QUA ZALO CHO IPHONE ---
         async function sendZalo() {
-            if (cart.length === 0) return;
+            if (cart.length === 0) { alert("Giỏ hàng đang trống!"); return; }
+            
             const btn = document.getElementById('zaloBtn');
-            const original = btn.innerHTML;
+            const originalText = btn.innerHTML;
+            const toast = document.getElementById('syncToast');
+            
             btn.disabled = true;
             btn.innerHTML = `<span class="animate-pulse">ĐANG TẠO ẢNH...</span>`;
-            
-            showToast("Đang xử lý hình ảnh...");
+            toast.classList.remove('hidden');
+            document.getElementById('toastText').innerText = "Đang tạo hóa đơn...";
 
             try {
-                // Cập nhật nội dung template hóa đơn
+                // 1. Cập nhật dữ liệu vào Template Hóa đơn
                 const customer = document.getElementById('customerName').value || "Khách lẻ";
                 const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
                 const discount = cart.reduce((sum, item) => sum + item.discount, 0);
-                
+
                 document.getElementById('invCustomerName').innerText = customer;
                 document.getElementById('invCustomerNote').innerText = document.getElementById('customerNote').value;
-                document.getElementById('invoiceDate').innerText = new Date().toLocaleDateString('vi-VN');
+                document.getElementById('invoiceDate').innerText = "Ngày: " + new Date().toLocaleDateString('vi-VN');
                 document.getElementById('invSubtotal').innerText = subtotal.toLocaleString() + '₫';
                 document.getElementById('invDiscount').innerText = '-' + discount.toLocaleString() + '₫';
                 document.getElementById('invGrandTotal').innerText = (subtotal - discount).toLocaleString() + '₫';
@@ -455,90 +366,81 @@
                     <tr><td><b>${i.name}</b></td><td align="center">${i.qty}</td><td align="right">${i.price.toLocaleString()}</td><td align="right"><b>${i.total.toLocaleString()}</b></td></tr>
                 `).join('');
 
-                // Render Canvas với cấu hình tối ưu cho Safari/iPhone
-                const canvas = await html2canvas(document.getElementById('invoice-template'), {
+                // 2. Render sang Canvas (Dùng cấu hình tối ưu cho Safari)
+                const template = document.getElementById('invoice-template');
+                template.style.visibility = 'visible'; // Hiện tạm thời để html2canvas tính toán
+
+                const canvas = await html2canvas(template, {
                     scale: 2,
                     useCORS: true,
-                    allowTaint: true,
                     backgroundColor: "#ffffff",
                     logging: false,
-                    onclone: (clonedDoc) => {
-                        // Đảm bảo template hiển thị trong bản clone để chụp
-                        clonedDoc.getElementById('invoice-template').style.position = 'static';
-                        clonedDoc.getElementById('invoice-template').style.left = '0';
-                    }
+                    width: 450
                 });
 
-                canvas.toBlob(async (blob) => {
-                    if (!blob) throw new Error("Canvas Blob failed");
-                    
-                    const file = new File([blob], `Don_Hang_${customer}.png`, { type: 'image/png' });
+                template.style.visibility = 'hidden'; // Ẩn lại ngay sau khi xong
 
-                    // Kiểm tra khả năng chia sẻ file (Web Share API)
+                // 3. Chuyển đổi sang Blob và Share
+                canvas.toBlob(async (blob) => {
+                    if (!blob) throw new Error("Không thể tạo tệp ảnh");
+
+                    const file = new File([blob], `HoaDon_NgocLan_${customer.replace(/\s/g, '_')}.png`, { type: 'image/png' });
+
+                    // Web Share API (Phương thức tốt nhất cho iPhone/Zalo)
                     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                        await navigator.share({
-                            files: [file],
-                            title: 'Hóa đơn Ngọc Lan',
-                            text: `Gửi hóa đơn cho khách hàng ${customer}`
-                        });
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Hóa đơn Ngọc Lan',
+                                text: `Hóa đơn đơn hàng của ${customer}`
+                            });
+                        } catch (err) {
+                            console.log("User cancelled or share failed", err);
+                        }
                     } else {
-                        // Fallback cho trình duyệt không hỗ trợ chia sẻ file
+                        // Fallback: Tự động tải ảnh (Dành cho máy quá cũ)
                         const link = document.createElement('a');
                         link.href = canvas.toDataURL('image/png');
-                        link.download = `Don_Hang_${customer}.png`;
-                        document.body.appendChild(link);
+                        link.download = `HoaDon_${customer}.png`;
                         link.click();
-                        document.body.removeChild(link);
-                        alert("iPhone của bạn không hỗ trợ Share trực tiếp, ảnh đã được tải về máy!");
+                        alert("Trình duyệt không hỗ trợ chia sẻ trực tiếp. Ảnh đã được tải về máy của bạn.");
                     }
-                    
-                    btn.innerHTML = original;
+
                     btn.disabled = false;
-                    hideToast();
+                    btn.innerHTML = originalText;
+                    toast.classList.add('hidden');
+                    lucide.createIcons();
                 }, 'image/png');
 
-            } catch (err) {
-                console.error(err);
-                alert("Lỗi tạo ảnh. Hãy thử lại hoặc chụp màn hình thủ công!");
-                btn.innerHTML = original;
+            } catch (error) {
+                console.error("Lỗi gửi ảnh:", error);
+                alert("Có lỗi xảy ra khi tạo ảnh. Vui lòng thử lại!");
                 btn.disabled = false;
-                hideToast();
+                btn.innerHTML = originalText;
+                toast.classList.add('hidden');
+                lucide.createIcons();
             }
         }
 
-        // --- HELPERS ---
-        function showToast(text) {
-            const t = document.getElementById('syncToast');
-            document.getElementById('syncToastText').innerText = text;
-            t.classList.remove('hidden');
-        }
-        function hideToast() {
-            document.getElementById('syncToast').classList.add('hidden');
-        }
+        // --- UI HELPERS ---
         function toggleHistory() {
             const m = document.getElementById('historyModal');
             m.style.display = m.style.display === 'block' ? 'none' : 'block';
-            if (m.style.display === 'block') renderHistory();
+            if (m.style.display === 'block') {
+                const list = document.getElementById('historyList');
+                list.innerHTML = orderHistory.length ? orderHistory.map(o => `
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div class="flex justify-between text-xs text-slate-400 font-bold mb-1"><span>${o.timestamp}</span><span class="text-blue-600">${o.total.toLocaleString()}₫</span></div>
+                        <div class="font-bold text-slate-800">${o.customer}</div>
+                        <div class="text-[10px] text-slate-500 line-clamp-1">${o.items}</div>
+                    </div>
+                `).join('') : '<p class="text-center py-10 opacity-30 italic">Trống</p>';
+            }
         }
-        function renderHistory() {
-            const l = document.getElementById('historyList');
-            l.innerHTML = orderHistory.length ? orderHistory.map(o => `
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-3">
-                    <div class="flex justify-between font-bold text-xs text-slate-400 mb-1"><span>${o.timestamp}</span><span class="text-blue-600">${o.total.toLocaleString()}₫</span></div>
-                    <div class="font-bold text-slate-800">${o.customer}</div>
-                </div>
-            `).join('') : '<p class="text-center text-slate-400 py-10">Trống</p>';
-        }
-        function openAiModal() { document.getElementById('aiModal').style.display = 'block'; document.getElementById('aiLoading').classList.remove('hidden'); }
-        function showAiResult(t) { document.getElementById('aiLoading').classList.add('hidden'); document.getElementById('aiResult').innerText = t; document.getElementById('copyAiBtn').classList.remove('hidden'); }
-        function closeAiModal() { document.getElementById('aiModal').style.display = 'none'; }
-        function copyAiContent() { 
-            const t = document.getElementById('aiResult').innerText;
-            navigator.clipboard.writeText(t).then(() => alert("Đã chép!"));
-        }
+
         function removeItems(id) { cart = cart.filter(i => i.id !== id); renderCart(); }
-        function resetApp(c = true) {
-            if(!c || confirm("Xóa đơn hiện tại?")) {
+        function resetApp(confirmNeeded = true) {
+            if(!confirmNeeded || confirm("Xóa đơn hàng hiện tại?")) {
                 cart = []; renderCart();
                 document.getElementById('customerName').value = '';
                 document.getElementById('customerNote').value = '';
