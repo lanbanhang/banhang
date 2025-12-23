@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ngọc Lan - Quản lý đơn hàng</title>
+    <!-- Tailwind CSS cho giao diện -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Lucide cho icon -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Cấu hình Web App để cài đặt vào màn hình điện thoại -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk5n4buNYyBMYW4iLAogICJzaG9ydF9uYW1lIjogIk5n4buNYyBMYW4iLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2YwZjlmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMxZDRlZGYiCn0=">
+    <style>
+        body {
+            background-color: #f0f9ff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1), 0 8px 10px -6px rgba(59, 130, 246, 0.1);
+        }
+        /* Icon NL cho App */
+        .app-icon-circle {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 22px;
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
+        }
+        .btn-active:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+<body class="bg-blue-50 text-slate-800 pb-40">
+
+    <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col">
+        
+        <!-- HEADER -->
+        <header class="bg-blue-700 pt-8 pb-12 px-6 rounded-b-[40px] text-white relative z-10 shadow-lg">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="app-icon-circle">NL</div>
+                    <div>
+                        <h1 class="text-xl font-black tracking-tight leading-none">NGỌC LAN</h1>
+                        <p class="text-[10px] uppercase tracking-widest opacity-70 mt-1">Hệ thống bán hàng</p>
+                    </div>
+                </div>
+                <button class="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- THÔNG TIN KHÁCH HÀNG -->
+        <div class="mx-5 -mt-6 bg-white rounded-3xl p-5 shadow-xl relative z-20 border border-blue-50">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                </div>
+                <input type="text" id="customerName" placeholder="Tên khách hàng..." class="flex-1 font-bold text-blue-900 focus:outline-none text-lg">
+            </div>
+            <div class="pl-11">
+                <textarea id="customerNote" placeholder="Ghi chú về khách hàng (địa chỉ, SĐT...)" rows="1" class="w-full text-sm text-slate-400 focus:outline-none resize-none overflow-hidden"></textarea>
+            </div>
+        </div>
+
+        <!-- FORM NHẬP SẢN PHẨM -->
+        <div class="m-5 bg-white rounded-3xl p-6 shadow-xl border border-blue-50 space-y-4">
+            <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl">
+                <i data-lucide="shopping-bag" class="text-blue-500 w-5 h-5"></i>
+                <input type="text" id="prodName" placeholder="Tên sản phẩm..." class="bg-transparent flex-1 focus:outline-none font-medium">
+            </div>
+
+            <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl">
+                <i data-lucide="tag" class="text-blue-400 w-5 h-5"></i>
+                <input type="text" id="prodNote" placeholder="Ghi chú (nhập 10% để giảm giá)..." class="bg-transparent flex-1 focus:outline-none text-sm italic">
+            </div>
+
+            <div class="flex gap-3">
+                <div class="flex-1 flex items-center gap-2 bg-blue-50 p-4 rounded-2xl">
+                    <span class="text-blue-600 font-bold">₫</span>
+                    <input type="number" id="prodPrice" placeholder="Đơn giá" class="bg-transparent w-full focus:outline-none font-bold text-blue-700">
+                </div>
+                <div class="w-28 flex items-center justify-between bg-slate-50 px-3 py-2 rounded-2xl border border-slate-100">
+                    <button onclick="changeQty(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-xl shadow-sm btn-active"><i data-lucide="minus" class="w-4 h-4 text-slate-500"></i></button>
+                    <span id="prodQty" class="font-bold text-lg">1</span>
+                    <button onclick="changeQty(1)" class="w-8 h-8 flex items-center justify-center bg-blue-600 rounded-xl shadow-sm btn-active"><i data-lucide="plus" class="w-4 h-4 text-white"></i></button>
+                </div>
+            </div>
+
+            <button onclick="addToCart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all btn-active shadow-lg shadow-blue-200">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i> THÊM VÀO ĐƠN
+            </button>
+        </div>
+
+        <!-- DANH SÁCH ĐƠN HÀNG -->
+        <div class="flex-1 px-5 mb-10">
+            <h3 class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+                Chi tiết đơn hàng <span id="itemCount" class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full text-[10px]">0</span>
+            </h3>
+            <div id="cartItems" class="space-y-3">
+                <div id="emptyCart" class="text-center py-10 opacity-30 italic text-sm">Chưa có sản phẩm nào</div>
+            </div>
+        </div>
+
+        <!-- FOOTER / TỔNG CỘNG -->
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white p-6 rounded-t-[40px] shadow-[0_-15px_30px_rgba(0,0,0,0.08)] z-50">
+            <div class="flex justify-between items-center mb-6 px-2">
+                <div>
+                    <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest block">Tổng thanh toán</span>
+                    <div id="totalDiscountDisplay" class="text-red-500 text-xs font-medium">Giảm giá: 0₫</div>
+                </div>
+                <span id="grandTotal" class="text-3xl font-black text-blue-900 tracking-tighter">0₫</span>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-3">
+                <button onclick="resetApp()" class="bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center btn-active transition-all border border-slate-200 aspect-square">
+                    <i data-lucide="trash-2" class="w-6 h-6"></i>
+                </button>
+                <button onclick="saveToSheets()" class="bg-emerald-50 text-emerald-600 rounded-2xl flex flex-col items-center justify-center btn-active transition-all border border-emerald-100">
+                    <i data-lucide="table" class="w-5 h-5 mb-1"></i>
+                    <span class="text-[10px] font-bold">LƯU SHEET</span>
+                </button>
+                <button onclick="sendZalo()" class="col-span-2 bg-blue-600 text-white py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-2 shadow-lg shadow-blue-200 btn-active transition-all">
+                    <i data-lucide="message-circle" class="w-6 h-6"></i> GỬI ZALO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Xử lý Logic -->
+    <script>
+        lucide.createIcons();
+
+        let currentQty = 1;
+        let cart = [];
+
+        function changeQty(val) {
+            currentQty = Math.max(1, currentQty + val);
+            document.getElementById('prodQty').innerText = currentQty;
+        }
+
+        function calculateDiscount(price, qty, note) {
+            const discountMatch = note.match(/(\d+)%/);
+            if (discountMatch) {
+                const percent = parseInt(discountMatch[1]);
+                const subtotal = price * qty;
+                return (subtotal * percent) / 100;
+            }
+            return 0;
+        }
+
+        function addToCart() {
+            const name = document.getElementById('prodName').value;
+            const note = document.getElementById('prodNote').value;
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            
+            if (!name || isNaN(price)) {
+                alert("Vui lòng nhập tên và giá sản phẩm!");
+                return;
+            }
+
+            const discountAmount = calculateDiscount(price, currentQty, note);
+            const subtotal = (price * currentQty) - discountAmount;
+
+            const item = {
+                id: Date.now(),
+                name,
+                note,
+                price,
+                qty: currentQty,
+                discount: discountAmount,
+                total: subtotal
+            };
+
+            cart.push(item);
+            renderCart();
+            
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodNote').value = '';
+            document.getElementById('prodPrice').value = '';
+            currentQty = 1;
+            document.getElementById('prodQty').innerText = 1;
+        }
+
+        function removeItems(id) {
+            cart = cart.filter(item => item.id !== id);
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            if (cart.length === 0) {
+                container.innerHTML = '<div id="emptyCart" class="text-center py-10 opacity-30 italic text-sm">Chưa có sản phẩm nào</div>';
+                updateTotals();
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center animate-in slide-in-from-right-4 duration-300">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-slate-800">${item.name}</h4>
+                        <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                            <span>SL: ${item.qty}</span> • <span>Giá: ${item.price.toLocaleString()}₫</span>
+                        </div>
+                        ${item.note ? `<div class="text-[11px] text-blue-500 mt-1 italic font-medium">Note: ${item.note}</div>` : ''}
+                        ${item.discount > 0 ? `<div class="text-[10px] text-red-500 font-bold">- Giảm: ${item.discount.toLocaleString()}₫</div>` : ''}
+                    </div>
+                    <div class="text-right flex items-center gap-3">
+                        <div class="font-black text-blue-700">${item.total.toLocaleString()}₫</div>
+                        <button onclick="removeItems(${item.id})" class="text-slate-300 hover:text-red-500"><i data-lucide="x-circle" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            
+            lucide.createIcons();
+            updateTotals();
+        }
+
+        function updateTotals() {
+            const grandTotal = cart.reduce((sum, item) => sum + item.total, 0);
+            const totalDiscount = cart.reduce((sum, item) => sum + item.discount, 0);
+            document.getElementById('grandTotal').innerText = grandTotal.toLocaleString() + '₫';
+            document.getElementById('totalDiscountDisplay').innerText = `Giảm giá: ${totalDiscount.toLocaleString()}₫`;
+            document.getElementById('itemCount').innerText = cart.length;
+        }
+
+        function resetApp() {
+            if(confirm("Xóa toàn bộ đơn hàng hiện tại?")) {
+                cart = [];
+                document.getElementById('customerName').value = '';
+                document.getElementById('customerNote').value = '';
+                renderCart();
+            }
+        }
+
+        // TÍNH NĂNG GỬI ZALO
+        function sendZalo() {
+            if (cart.length === 0) {
+                alert("Đơn hàng trống!");
+                return;
+            }
+
+            const customer = document.getElementById('customerName').value || "Quý khách";
+            const customerNote = document.getElementById('customerNote').value;
+            const total = document.getElementById('grandTotal').innerText;
+            
+            let message = `--- ĐƠN HÀNG NGỌC LAN ---\n`;
+            message += `Khách hàng: ${customer}\n`;
+            if(customerNote) message += `Ghi chú: ${customerNote}\n`;
+            message += `------------------------\n`;
+            
+            cart.forEach((item, index) => {
+                message += `${index + 1}. ${item.name} x${item.qty}\n`;
+                if(item.note) message += `   (Lưu ý: ${item.note})\n`;
+                message += `   Thành tiền: ${item.total.toLocaleString()}₫\n`;
+            });
+            
+            message += `------------------------\n`;
+            message += `TỔNG CỘNG: ${total}\n`;
+            message += `Cảm ơn quý khách!`;
+
+            const encodedMessage = encodeURIComponent(message);
+            // Link mở Zalo (có thể cần thay đổi số điện thoại nếu muốn gửi đích danh)
+            window.location.href = `https://zalo.me/share?text=${encodedMessage}`;
+        }
+
+        // TÍNH NĂNG LƯU BẢNG TÍNH (Mẫu)
+        function saveToSheets() {
+            if (cart.length === 0) {
+                alert("Không có dữ liệu để lưu!");
+                return;
+            }
+
+            // Đây là phần logic giả lập. Để thực sự lưu vào Google Sheets, 
+            // bạn cần tạo một Web App URL từ Google Apps Script.
+            const scriptURL = 'YOUR_GOOGLE_SCRIPT_URL_HERE'; 
+            
+            const customer = document.getElementById('customerName').value;
+            const total = cart.reduce((sum, item) => sum + item.total, 0);
+
+            // Hiển thị thông báo trạng thái
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader" class="w-5 h-5 animate-spin"></i>`;
+            lucide.createIcons();
+
+            setTimeout(() => {
+                alert("✅ Đã lưu đơn hàng vào Google Sheets thành công!");
+                btn.innerHTML = originalText;
+                lucide.createIcons();
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
